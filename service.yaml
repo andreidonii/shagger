@@ -1,0 +1,10 @@
+services:
+  SomeConsumer.function1:
+    in:
+      - binary
+  DEFAULT_GROUP.function2:
+    in:
+      asd
+    out:
+      asd-out
+    error:
