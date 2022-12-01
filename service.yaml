@@ -1,10 +1,15 @@
-services:
-  SomeConsumer.function1:
-    in:
-      - binary
-  DEFAULT_GROUP.function2:
-    in:
-      asd
-    out:
-      asd-out
-    error:
+bootstrap_servers:
+  - localhost:9092
+validate:
+  in:
+    SomeConsumer.function1:
+        type: object
+        properties:
+            asd:
+              - type: string
+    DEFAULT_GROUP.function2:
+        type: object
+        properties:
+            asd:
+              - type: string
+  out:

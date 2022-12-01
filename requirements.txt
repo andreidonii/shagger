@@ -1,2 +1,7 @@
 aiokafka
 asyncio
+pyyaml
+pydantic-sqlalchemy
+pydantic
+pydantic-to-typescript
+sqlalchemy
