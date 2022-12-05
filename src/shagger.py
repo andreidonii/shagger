@@ -1,4 +1,5 @@
 import asyncio
+import os
 import pickle
 import traceback
 from json import JSONDecodeError
@@ -6,9 +7,6 @@ from logging import getLogger
 from typing import List, Coroutine
 
 from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
-
-from config import Config
-from validation import Validate
 
 logger = getLogger(__name__)
 DEFAULT_GROUP = 'DEFAULT_GROUP'
@@ -28,9 +26,7 @@ class ShaggerBase(object):
 
 
 class App(ShaggerBase):
-    __config: Config = None
     __init: Coroutine = None
-    __validate: Validate = None
 
     def __init__(self, function, *args, **kwargs):
         topic_parts = function.__qualname__.split('.')
@@ -43,12 +39,8 @@ class App(ShaggerBase):
         self.function = function
 
     @classmethod
-    def run(cls, *, bootstrap_servers=None, init=None, config_file='../service.yaml'):
-        cls.__config = Config(config_file)
-        if cls.__config.validate:
-            cls.__validate = Validate(cls.__config.validate)
-
-        ShaggerBase._bootstrap_servers = bootstrap_servers or cls.__config.bootstrap_servers
+    def run(cls, *, bootstrap_servers=None, init=None):
+        ShaggerBase._bootstrap_servers = bootstrap_servers or os.environ["bootstrap_servers"]
         cls.__init = init
         ShaggerBase.loop = asyncio.get_event_loop()
         ShaggerBase.loop.run_until_complete(cls.__run_loop())
@@ -89,8 +81,6 @@ class App(ShaggerBase):
                     except JSONDecodeError:
                         j = msg.value
 
-                    # if cls.__validate is not None:
-                    #     print(cls.__validate.check_in(j, '.'.join([group, msg.topic])))
                     try:
                         if group == DEFAULT_GROUP:
                             if "args" in j and "kwargs" in j:
@@ -104,8 +94,6 @@ class App(ShaggerBase):
                                 f(c, j)
                     except BaseException as e:
                         logger.error('Error' + str([e, traceback.format_exc()]))
-            # except SchemaError:
-            #     logger.error("Validation did not went through")
             finally:
                 await consumer.stop()
 
@@ -121,7 +109,6 @@ def service(function=None):
 
 
 class Stub(ShaggerBase):
-    __config = None
 
     def __init__(self, function):
         topic_parts = function.__qualname__.split('.')
@@ -140,7 +127,7 @@ class Stub(ShaggerBase):
 
         if ShaggerBase._publisher is None:
             publisher = AIOKafkaProducer(
-                bootstrap_servers=ShaggerBase._bootstrap_servers or Config().bootstrap_servers,
+                bootstrap_servers=ShaggerBase._bootstrap_servers or os.environ["bootstrap_servers"],
                 compression_type='gzip', acks=0)
             await publisher.start()
             res = await publisher.send(topic=topic, value=pickle.dumps({"args": args, "kwargs": kwargs}))
@@ -152,13 +139,7 @@ class Stub(ShaggerBase):
                                                      value=pickle.dumps({"args": args, "kwargs": kwargs}))
 
     @classmethod
-    def run(cls, *, bootstrap_servers=None, init=None, config_file='service.yaml'):
-        cls.__config = Config(config_file)
-        print('HERE2')
-
-        if cls.__config['validate']:
-            print('HERE')
-            cls.__validate = Validate(cls.__config.validate)
+    def run(cls, *, bootstrap_servers=None, init=None):
         ShaggerBase._bootstrap_servers = bootstrap_servers
         cls.__init = init
         if ShaggerBase.loop is None:
