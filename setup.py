@@ -9,6 +9,5 @@ setup(
     description='A kafka based draft microservice framework',
     author='Andrei Donii',
     author_email='569460@gmail.com',
-    packages=['shagger'],
     install_requires=required
 )
