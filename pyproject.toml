@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "shagger"
+version = "0.1.0"
+description = ""
+authors = ["Your Name <you@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+aiokafka = "^0.8.0"
+asyncio = "^3.4.3"
+pydantic = "^1.10.2"
+pydantic-sqlalchemy = "^0.0.9"
+pydantic-to-typescript = "^1.0.10"
+sqlalchemy = "^1.4.44"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
